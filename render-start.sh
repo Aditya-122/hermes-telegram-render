@@ -6,7 +6,7 @@
     export HERMES_INSTALL_DIR=/opt/render/project/src/hermes-agent
     export HERMES_HOME="${HERMES_HOME:-/opt/render/project/src/.hermes-runtime}"
     
-    export HERMES_MODEL_PROVIDER="${HERMES_MODEL_PROVIDER:-openai}"
+    export HERMES_MODEL_PROVIDER="${HERMES_MODEL_PROVIDER:-openai-api}"
     export HERMES_MODEL="${HERMES_MODEL:-gpt-5.4-mini}"
     
     HERMES_BIN="$HERMES_INSTALL_DIR/venv/bin/hermes"
@@ -19,7 +19,7 @@
     : "${TELEGRAM_WEBHOOK_URL:?Missing TELEGRAM_WEBHOOK_URL}"
     : "${TELEGRAM_WEBHOOK_SECRET:?Missing TELEGRAM_WEBHOOK_SECRET}"
     
-    if [ "$HERMES_MODEL_PROVIDER" = "openai" ]; then
+    if [ "$HERMES_MODEL_PROVIDER" = "openai-api" ]; then
       : "${OPENAI_API_KEY:?Missing OPENAI_API_KEY}"
     fi
     
