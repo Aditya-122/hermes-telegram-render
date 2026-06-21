@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+bash
+    #!/usr/bin/env bash
     set -euo pipefail
     
     export HERMES_HOME=/opt/render/project/src/.hermes-build
@@ -12,11 +13,12 @@
     
     test -x "$UV" || { echo "uv missing at $UV"; exit 1; }
     test -x "$PY" || { echo "python missing at $PY"; exit 1; }
+    test -x "$HERMES" || { echo "hermes missing at $HERMES"; exit 1; }
     
     cd "$HERMES_INSTALL_DIR"
+    
     "$UV" pip install --python "$PY" -e '.[messaging]'
     
-    "$PY" -c 'import telegram; from telegram.ext import Application; print("Telegram dependency OK:", telegram.version)'
+    "$PY" -c 'from telegram import Update, Bot; from telegram.ext import Application; import importlib.metadata as m; print("python-telegram-bot OK:", m.version("python-telegram-bot"))'
     
     "$HERMES" --version
-
