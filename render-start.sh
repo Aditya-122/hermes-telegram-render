@@ -1,4 +1,4 @@
- #!/usr/bin/env bash
+#!/usr/bin/env bash
     set -euo pipefail
     
     export PYTHONUNBUFFERED=1
@@ -6,10 +6,15 @@
     export HERMES_INSTALL_DIR=/opt/render/project/src/hermes-agent
     export HERMES_HOME="${HERMES_HOME:-/opt/render/project/src/.hermes-runtime}"
     
-    export HERMES_MODEL_PROVIDER="${HERMES_MODEL_PROVIDER:-openai-api}"
+    Normalize provider. Hermes uses "openai-api", NOT "openai".
+    if [ -z "${HERMES_MODEL_PROVIDER:-}" ] || [ "${HERMES_MODEL_PROVIDER:-}" = "openai" ]; then
+      export HERMES_MODEL_PROVIDER="openai-api"
+    fi
+    
     export HERMES_MODEL="${HERMES_MODEL:-gpt-5.4-mini}"
     
     HERMES_BIN="$HERMES_INSTALL_DIR/venv/bin/hermes"
+    PY="$HERMES_INSTALL_DIR/venv/bin/python"
     
     export PATH="$HERMES_INSTALL_DIR/venv/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
     export TELEGRAM_WEBHOOK_PORT="${PORT:-10000}"
@@ -35,11 +40,37 @@
       exit 127
     }
     
-    echo "Forcing Hermes model provider: $HERMES_MODEL_PROVIDER"
-    echo "Forcing Hermes model: $HERMES_MODEL"
+    echo "Effective provider: $HERMES_MODEL_PROVIDER"
+    echo "Effective model: $HERMES_MODEL"
     
     "$HERMES_BIN" config set model.provider "$HERMES_MODEL_PROVIDER"
     "$HERMES_BIN" config set model.default "$HERMES_MODEL"
+    
+    Extra hard override in case config set behavior changes.
+    "$PY" - <<'PY'
+    import os
+    from pathlib import Path
+    import yaml
+    
+    home = Path(os.environ["HERMES_HOME"])
+    cfg_path = home / "config.yaml"
+    cfg = {}
+    if cfg_path.exists():
+        cfg = yaml.safe_load(cfg_path.read_text()) or {}
+    
+    cfg.setdefault("model", {})
+    cfg["model"]["provider"] = os.environ.get("HERMES_MODEL_PROVIDER", "openai-api")
+    cfg["model"]["default"] = os.environ.get("HERMES_MODEL", "gpt-5.4-mini")
+    
+    Clear stale custom/OpenRouter-ish endpoint fields from old configs.
+    cfg["model"].pop("base_url", None)
+    cfg["model"].pop("api_key", None)
+    
+    cfg_path.write_text(yaml.safe_dump(cfg, sort_keys=False))
+    print("Wrote Hermes config:", cfg_path)
+    print("model.provider =", cfg["model"]["provider"])
+    print("model.default =", cfg["model"]["default"])
+    PY
     
     echo "Current Hermes config:"
     "$HERMES_BIN" config || true
