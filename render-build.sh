@@ -1,4 +1,4 @@
-  #!/usr/bin/env bash
+#!/usr/bin/env bash
     set -euo pipefail
     
     export HERMES_HOME=/opt/render/project/src/.hermes-build
@@ -16,10 +16,7 @@
     cd "$HERMES_INSTALL_DIR"
     "$UV" pip install --python "$PY" -e '.[messaging]'
     
-    "$PY" - <<'PY'
-    import telegram
-    from telegram.ext import Application
-    print("Telegram dependency OK:", telegram.version)
-    PY
+    "$PY" -c 'import telegram; from telegram.ext import Application; print("Telegram dependency OK:", telegram.version)'
     
     "$HERMES" --version
+
